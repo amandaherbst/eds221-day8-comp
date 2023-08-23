@@ -18,7 +18,8 @@ library(paletteer)
 library(ggExtra)
 library(ggbeeswarm)
 
-
+library(gapminder)
+library(sf)
 ```
 
 ## Read in data
@@ -80,4 +81,57 @@ ggplot(data = lizards, aes(x = total_length,
                      breaks = seq(from = 0, to = 100, by = 20),
                      expand = c(0,0)) + # get rid of extra space above and below limits
   scale_color_gradientn(colors = c("yellow", "orange", "purple"))
+```
+
+```{r}
+ggplot(data = gapminder, aes(x = lifeExp, y = gdpPercap)) +
+  geom_point() +
+  annotate("text", x = 40, y = 90000, label = "A LABEL!") + # position based on axes scales
+  geom_hline(yintercept = 70000, linetype = "dotted", color = "purple") + # horizontal line
+  geom_vline(xintercept = mean(gapminder$lifeExp)) # vertical line at mean
+```
+
+```{r}
+gapminder %>% 
+  filter(year == 2002, continent == "Europe") %>% 
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point(shape = 22, size  = 4, color = "purple", fill = "orange") + # google ggplot shapes
+  geom_text_repel(aes(label = country)) # in ggrepel package (avoids overlapping labels)
+```
+
+```{r}
+gapminder %>% 
+  filter(year == 2002, continent == "Europe") %>% 
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() + 
+  gghighlight(country == "Poland", label_key = country)
+```
+
+Create a ggplot using data from only 2007 then highlight all countries in Europe, adding their country name as the label
+
+```{r}
+gapminder %>% 
+  filter(year == 2007) %>% 
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() +
+  gghighlight(continent == "Europe") +
+  geom_text_repel(aes(label = country))
+```
+
+```{r}
+jornada_veg <- read_sf(here("data_raw", "spatial_vegetation", "doc.kml")) %>% 
+  select(name = Name)
+
+ggplot() +
+  geom_sf(data = jornada_veg, aes(fill = name), color = NA) + 
+  # don't need to tell it x and y cause it can see the geometry col
+  theme_minimal() +
+  # paleteer aggergates all of these color palettes ppl have made
+  # look at view(palettes_d_names)
+  scale_fill_paletteer_d(palette = "beyonce::X73") +
+  theme(panel.background = element_rect(color = "purple", size = 5, fill = "pink"),
+        plot.background = element_rect(fill = "turquoise"),
+        panel.grid = element_line(color = "magenta"),
+        axis.text.x = element_text(color = "white"),
+        legend.background = element_rect(fill = "white", color = "yellow", size = 10))
 ```
